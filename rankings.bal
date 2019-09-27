@@ -9,11 +9,17 @@ type Ranking record {
 };
 
 service rankings on new http:Listener(9090) {
+  @http:ResourceConfig {
+    methods: ["GET"],
+    path: "/"
+  }
   resource function list(http:Caller caller, http:Request req) {
+    http:Response r = new;
     table<Ranking>|error domains = searchDomains(req.getQueryParamValue("query"));
     if (domains is table<Ranking>) {
-      json j = jsonutils:fromTable(domains);
-      var result = caller->respond(j.toJsonString());
+      json payload = jsonutils:fromTable(domains);
+      r.setJsonPayload(<@untainted> payload);
+      var result = caller->respond(r);
       if (result is error) {
         log:printError("Error sending response", result);
       }
@@ -25,7 +31,7 @@ service rankings on new http:Listener(9090) {
 
 function searchDomains(string? query) returns @tainted table<Ranking>|error {
 
-  string srcFileName = "./top-10.csv";
+  string srcFileName = "./top-1m.csv";
   string q = query is string ? query : "facebook.com";
   table<Ranking> rs = table {{ key rank, domain }}; // empty 
   io:ReadableCSVChannel csvChannel = check io:openReadableCsvFile(srcFileName);
