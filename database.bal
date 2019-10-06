@@ -8,7 +8,7 @@ type Ranking record {
 
 function searchDomains(string? query) returns @tainted table<Ranking>|error {
 
-  string srcFileName = "src/rankingsApiBal/resources/top-1m.csv";
+  string srcFileName = "src/rankingsApiBal/tests/resources/top-10.csv";
   string q = query is string ? query : "facebook.com";
   table<Ranking> rs = table {{ key rank, domain }}; // empty 
   io:ReadableCSVChannel csvChannel = check io:openReadableCsvFile(srcFileName);
