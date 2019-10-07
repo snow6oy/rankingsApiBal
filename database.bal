@@ -6,30 +6,32 @@ type Ranking record {
   string domain;
 };
 
-function searchDomains(string? query) returns @tainted table<Ranking>|error {
+table<Ranking> database = table{};
 
-  string srcFileName = "src/rankingsApiBal/tests/resources/top-10.csv";
-  string q = query is string ? query : "facebook.com";
-  table<Ranking> rs = table {{ key rank, domain }}; // empty 
+function __init() returns error? {
+  io:println("initialising database");
+  string srcFileName = "src/rankingsApiBal/resources/top-1m.csv";
   io:ReadableCSVChannel csvChannel = check io:openReadableCsvFile(srcFileName);
-  var database = csvChannel.getTable(Ranking);   
-  var ignoreCsvClose = csvChannel.close();
-  // io:println("searching for ", q);
-
-  if (database is table<Ranking>) {
-    foreach var rec in database {
-      if (domainMatches(rec.domain, q)) {
-        Ranking result = { rank: rec.rank, domain: rec.domain };
-        var ignoreTableError = rs.add(result); // ignore outcome because only a copy
-      }
-    }
-    database = rs; 
+  var anyTable = csvChannel.getTable(Ranking); 
+  if (anyTable is table<Ranking>) {
+    database = <@untainted> anyTable;
   } else {
-    log:printError(
-      "An error occurred while creating table: ", err = database
-    );
+    log:printError("Error initialising database", anyTable);
   }
-  return database;
+  var ignoreCsvClose = csvChannel.close();
+}
+
+function searchDomains(string? query) returns @tainted table<Ranking>|error {
+  io:println("searching for ", query);
+  string q = query is string ? query : "facebook.com";
+  table<Ranking> rs = table {{ key rank, domain }};
+  foreach var rec in database {
+    if (domainMatches(rec.domain, q)) {
+      Ranking result = { rank: rec.rank, domain: rec.domain };
+      var ignoreTableError = rs.add(result); // ignore outcome because only a copy
+    }
+  }
+  return rs;
 }
 
 function domainMatches(string domain, string query) returns boolean {
