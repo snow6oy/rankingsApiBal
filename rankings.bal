@@ -11,6 +11,13 @@ listener http:Listener endpoint = new(9090);
   tag: "rankings"
 }
 
+@docker:CopyFiles {
+  files: [{ 
+    sourceFile: "src/rankingsApiBal/resources/top-1m.csv", 
+    target: "/home/ballerina/src/rankingsApiBal/resources/top-1m.csv" 
+  }]
+}
+
 @http:ServiceConfig {
   basePath: "/rankings"
 }
