@@ -1,5 +1,7 @@
 # Using Kubernetes with Ballerina
 
+An API written in Ballerina and deployed to Kubernetes that returns website rankings
+
 ## Contents
 - Check your environment
 - Install Minikube
@@ -14,7 +16,9 @@ The setup described here used a standard laptop with 8GB of RAM running
 > Microsoft Windows [Version 10.0.18362.357]
 
 Hyper-V should be enabled and we need to add a [Virtual Switch using the Hyper-V Manager](https://docs.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/create-a-virtual-switch-for-hyper-v-virtual-machines). 
-My switch was named  _minikube_. There was an issue with IPV6 addressing (race condition or something like that) I [disabled ipv6](https://medium.com/@JockDaRock/disabling-ipv6-on-network-adapter-windows-10-5fad010bca75) and started over. When using CLI tools I prefer bash and have Windows Subsystem for Linux (WSL) setup with Ubuntu.
+My switch was named  _minikube_. There was an issue with IPV6 addressing (race condition or something like that) I [disabled ipv6](https://medium.com/@JockDaRock/disabling-ipv6-on-network-adapter-windows-10-5fad010bca75) and started over. When using CLI tools I prefer bash and have Windows Subsystem for Linux (WSL) setup wit 18.04 LTS (Bionic)
+
+![architecture](balk8.jpg)
 
 ## Install minikube
 Initially minikube was installed on WSL but then I realised that this won't work
@@ -36,7 +40,7 @@ Ah well. Here is a summary of what I found out about where to run minikube with 
 | VM     | no             | yes         | yes        |
 | Native | no             | no          | yes        |
 
-But then anyway it turned out that minikube on Windows was necessary anywany. Because when Docker Desktop and minikube are running simultaneously Windows ran out of RAM. To side-step this I used the docker daemon that runs inside minikube and stopped Docker Desktop.
+But then anyway it turned out that minikube on Windows was necessary aaaanyway. Because when Docker Desktop and minikube are running simultaneously Windows ran out of RAM. To side-step this I used the docker daemon that runs inside minikube and stopped Docker Desktop.
 
 In this design, I also like the separation between WSL and Windows. It means that when I come to actually deploy to a cloud, I only need to reconfigure the clients on WSL. Windows is acting like a fake cloud :)
 
@@ -124,53 +128,27 @@ Kubernetes master is running at https://192.168.1.67:8443
 Almost there! I learnt most of this from [minkube on win with wsl](https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/)
 
 ## Setup Kubernetes using Ballerina
-Using [ballerina](https://ballerina.io/) I defined the Rankings API that was deployed to my new cluster.
+Using [ballerina](https://ballerina.io/) I defined a Rankings API to deploy to my new cluster. This is a simple test service based on data sourced from [Alexa](https://www.alexa.com/).
 
 The following shows how the artifacts built by ballerina were applied to minikube and tested. 
-After building the ballerina project we can first test that the container is available.
-=======
-An API written in Ballerina that returns website rankings
-
+First I tested the container that Ballerina built.
 ```
-$ curl http://localhost:9090/rankings/?query=goo
-[{
-  "rank": "1",
-  "domain": "google.com"
- }, {
-  "rank": "7",
-  "domain": "google.co.in"
- }]
+$ docker run -d -p 9090:9090 snow6oy/fnarg:rankingsApiBal
 ```
-The data is sourced from [Alexa](https://www.alexa.com/).
-
-# docker
-
-The Ballinerina API module builds a [docker image](https://hub.docker.com/r/snow6oy/pacheco/tags). Once pulled it can be run as.
-
-```
-> docker run -d -p 9090:9090 snow6oy/pacheco:rankings
-$CONTAINER
-
-> curl http://localhost:9090/rankings/status
-ok
->>>>>>> edf1a364812ac491a627ef9d2bdde8812d5a1a58
-```
-docker run -d -p 9090:9090 snow6oy/fnarg:rankingsApiBal
-```
-Now it is running, check the status of the service
+Now the container is running, check the service
 ```
 $ curl http://localhost:9090/rankings/status
 ok
 ```
 Looks good, so let's publish to the cluster.
 ```
-# kubectl apply -f /home/gavin/fnarg/target/kubernetes/rankingsApiBal
+$ kubectl apply -f /home/gavin/fnarg/target/kubernetes/rankingsApiBal
 service/rankings-svc created
 ingress.extensions/rankings-ingress created
 secret/rankings-secure-socket created
 deployment.apps/rankingsapibal-deployment created
 ```
-And test you get the following
+And to see what just happened
 ```
 $ kubectl get svc
 NAME           TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
@@ -180,7 +158,7 @@ rankings-svc   NodePort    10.104.84.120   <none>        9090:30191/TCP   44s
 Using the minikube IP and the NodePort I can run an HTTP query.
 
 ```
-# curl https://192.168.1.67:30191/rankings/?query=goo -k
+$ curl https://192.168.1.67:30191/rankings/?query=goo -k
 [{
 	"rank": "1",
 	"domain": "google.com"
@@ -190,6 +168,3 @@ Using the minikube IP and the NodePort I can run an HTTP query.
 }]
 ```
 Hooray!
-
-
-
