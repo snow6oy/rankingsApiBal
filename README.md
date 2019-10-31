@@ -12,7 +12,9 @@
 
 The setup described here used a standard laptop with 8GB of RAM running
 > Microsoft Windows [Version 10.0.18362.357]
-Hyper-V is enabled but we need to add a [Virtual Switch using the Hyper-V Manager](https://docs.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/create-a-virtual-switch-for-hyper-v-virtual-machines). Mine was called _minikube_. There was an issue with a race condition or something like that. It meant HyperV got an IPv6 address so I [disabled ipv6](https://medium.com/@JockDaRock/disabling-ipv6-on-network-adapter-windows-10-5fad010bca75) and started over. When using CLI tools I prefer bash and have Windows Subsystem for Linux (WSL) setup with Ubuntu.
+
+Hyper-V should be enabled and we need to add a [Virtual Switch using the Hyper-V Manager](https://docs.microsoft.com/en-us/windows-server/virtualization/hyper-v/get-started/create-a-virtual-switch-for-hyper-v-virtual-machines). 
+My switch was named  _minikube_. There was an issue with IPV6 addressing (race condition or something like that) I [disabled ipv6](https://medium.com/@JockDaRock/disabling-ipv6-on-network-adapter-windows-10-5fad010bca75) and started over. When using CLI tools I prefer bash and have Windows Subsystem for Linux (WSL) setup with Ubuntu.
 
 ## Install minikube
 Initially minikube was installed on WSL but then I realised that this won't work
@@ -27,16 +29,16 @@ And then I ran straight into:
 * minikube v1.5.0 on Microsoft Windows 10 Enterprise 10.0.18362 Build 18362
 X The driver 'none' is not supported on windows
 ```
-Ah well. Here is a summary.
+Ah well. Here is a summary of what I found out about where to run minikube with what driver.
 
 |        | **WSL Ubuntu** | **Windows** | **Ubuntu** |
 |--------|----------------|-------------|------------|
 | VM     | no             | yes         | yes        |
 | Native | no             | no          | yes        |
 
-But then anyway it turned out that when Docker Desktop and minikube are running simultaneously Windows ran out of RAM.
-To side-step the out-of-memory errors I configured the clients to use the docker daemon that runs inside minikube.
-In this design, I also like the separation between WSL and Windows. It means that when I come to actually deploy to a cloud, I only need to reconfigure the clients on WSL. Windows is a fake cloud :)
+But then anyway it turned out that minikube on Windows was necessary anywany. Because when Docker Desktop and minikube are running simultaneously Windows ran out of RAM. To side-step this I used the docker daemon that runs inside minikube and stopped Docker Desktop.
+
+In this design, I also like the separation between WSL and Windows. It means that when I come to actually deploy to a cloud, I only need to reconfigure the clients on WSL. Windows is acting like a fake cloud :)
 
 ## Create a Kubernetes cluster
 Run the windows cmd as Administrator and run the following.
@@ -77,7 +79,7 @@ $ docker info
 This will return a lot of output, check for the line **Name: minikube**. See [set up docker for wsl](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly) for more.
 
 ## Install, run and test Kubectl 
-Kubectl will communicate with the Kubernetes cluster that was created using minikube. Version v1.16.2 was set up in WSL for day to day use.
+Kubectl will communicate with the Kubernetes cluster that was created using minikube. Kubectl version v1.16.2 was set up in WSL.
 ```
 curl -LO "https://storage.googleapis.com/kubernetes-release/release/$ver/bin/linux/amd64/kubectl"
 mv kubectl /usr/local/bin
@@ -119,7 +121,7 @@ Now that we have switch our kubectl to use the minikube context let's test it.
 $ kubectl cluster-info
 Kubernetes master is running at https://192.168.1.67:8443
 ```
-Hooray! I learnt most of this from [minkube on win with wsl](https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/)
+Almost there! I learnt most of this from [minkube on win with wsl](https://www.jamessturtevant.com/posts/Running-Kubernetes-Minikube-on-Windows-10-with-WSL/)
 
 ## Setup Kubernetes using Ballerina
 Using [ballerina](https://ballerina.io/) I defined the Rankings API that was deployed to my new cluster.
