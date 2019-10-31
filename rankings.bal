@@ -14,11 +14,11 @@ import ballerina/log;
 listener http:Listener rankings = new(9090, config = {
   secureSocket: {
     keyStore: {
-      path: "/home/gavin/fnarg/src/rankingsApiBal/resources/ballerinaKeystore.p12",
+      path: "src/rankingsApiBal/resources/ballerinaKeystore.p12",
       password: "ballerina"
     },
     trustStore: {
-      path: "/home/gavin/fnarg/src/rankingsApiBal/resources/ballerinaTruststore.p12",
+      path: "src/rankingsApiBal/resources/ballerinaTruststore.p12",
       password: "ballerina"
     }
   }

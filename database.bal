@@ -35,7 +35,6 @@ function searchDomains(string? query) returns @tainted table<Ranking>|error {
 }
 
 function domainMatches(string domain, string query) returns boolean {
-  // io:println(domain, "\t", query);
   boolean matched = false;
   int? index = domain.indexOf(query);
   if (index is int) {

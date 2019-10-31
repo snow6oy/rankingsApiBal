@@ -1,5 +1,6 @@
-# Kubernetes with Ballerina
+# Using Kubernetes with Ballerina
 
+## Contents
 - Check your environment
 - Install Minikube
 - Create a Kubernetes cluster
@@ -125,6 +126,32 @@ Using [ballerina](https://ballerina.io/) I defined the Rankings API that was dep
 
 The following shows how the artifacts built by ballerina were applied to minikube and tested. 
 After building the ballerina project we can first test that the container is available.
+=======
+An API written in Ballerina that returns website rankings
+
+```
+$ curl http://localhost:9090/rankings/?query=goo
+[{
+  "rank": "1",
+  "domain": "google.com"
+ }, {
+  "rank": "7",
+  "domain": "google.co.in"
+ }]
+```
+The data is sourced from [Alexa](https://www.alexa.com/).
+
+# docker
+
+The Ballinerina API module builds a [docker image](https://hub.docker.com/r/snow6oy/pacheco/tags). Once pulled it can be run as.
+
+```
+> docker run -d -p 9090:9090 snow6oy/pacheco:rankings
+$CONTAINER
+
+> curl http://localhost:9090/rankings/status
+ok
+>>>>>>> edf1a364812ac491a627ef9d2bdde8812d5a1a58
 ```
 docker run -d -p 9090:9090 snow6oy/fnarg:rankingsApiBal
 ```
